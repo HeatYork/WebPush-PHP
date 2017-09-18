@@ -15,7 +15,12 @@ class WebPush
     // Package
     private $title, $body, $icon, $url, $button;
 
-    // 建構子
+    /**
+     * @param string $type
+     * @param array  $array
+     *
+     * @return TRUE | FALSE
+     */
     function __construct( $type, $array )
     {
         # 判斷是否在list裡
@@ -37,7 +42,16 @@ class WebPush
         if ( ! empty( $this->errorMsg ) )return $this->status;
     }
 
-    // 調用
+    /**
+     * @param string $token
+     * @param string $title
+     * @param string $body
+     * @param array  $url
+     * @param string $icon
+     * @param array  $button
+     *
+     * @return TRUE | FALSE
+     */
     function __invoke( $token = FALSE, $title = FALSE, $body = FALSE, $url = FALSE, $icon = FALSE, $button = FALSE )
     {
         # 判斷所需參數是否都有設定
@@ -62,6 +76,7 @@ class WebPush
                 break;
         }
     }
+    
     /**
      * @return string
      */
@@ -70,7 +85,7 @@ class WebPush
         return $this->errorMsg;
     }
 
-    // 驗證
+    /* 驗證 */ 
     private function verify( $type, $para )
     {
         try
@@ -87,15 +102,8 @@ class WebPush
             $this->status = FALSE;
         }
     }
-    /**
-     * @param string $defaultOptions
-     * @param string $title
-     * @param string $body
-     * @param array  $url
-     * @param string $url
-     *
-     * @return TRUE | FALSE
-     */
+
+    /* Fcm 推播 */
     private function sendPushFcm( $token, $title, $body, $url, $icon , $button = FALSE )
     {
         // FCM Server Production
@@ -103,14 +111,7 @@ class WebPush
 
     }
 
-    /**
-     * @param string $defaultOptions
-     * @param string $title
-     * @param string $body
-     * @param array  $url
-     *
-     * @return TRUE | FALSE
-     */
+    /* Safari 推播 */
     private function sendPushSafari( $token, $title, $body, $url )
     {
 
@@ -203,7 +204,7 @@ class WebPush
         return TRUE;
     }
 
-    //檢查APNS Error Response
+    /* 檢查APNS Error Response */
     private function checkAppleErrorResponse(&$fp)
     {
         # byte1=always 8, byte2=StatusCode, bytes3,4,5,6=identifier(rowID). Should return nothing if OK.
