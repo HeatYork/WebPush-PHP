@@ -15,9 +15,10 @@ class WebPush
     // Package
     private $title, $body, $icon, $url, $button;
 
-
+    // 建構子
     function __construct( $type, $array )
     {
+        # 判斷是否在list裡
         if ( in_array($type, $this->type_array) )
         {
             $this->type = $type;
@@ -28,6 +29,7 @@ class WebPush
         }
         if ( ! empty( $this->errorMsg ) )return $this->status;
 
+        # 判斷所需參數是否都有設定
         foreach ($array as $key => $value)
         {
             $this->verify( $key, $value );
@@ -35,8 +37,10 @@ class WebPush
         if ( ! empty( $this->errorMsg ) )return $this->status;
     }
 
+    // 調用
     function __invoke( $token = FALSE, $title = FALSE, $body = FALSE, $url = FALSE, $icon = FALSE, $button = FALSE )
     {
+        # 判斷所需參數是否都有設定
         $this->verify( "token", $token );
         $this->verify( "title", $title );
         $this->verify( "body", $body );
@@ -58,7 +62,15 @@ class WebPush
                 break;
         }
     }
+    /**
+     * @return string
+     */
+    public function getErrorMsg()
+    {
+        return $this->errorMsg;
+    }
 
+    // 驗證
     private function verify( $type, $para )
     {
         try
@@ -75,13 +87,22 @@ class WebPush
             $this->status = FALSE;
         }
     }
-
+    /**
+     * @param string $defaultOptions
+     * @param string $title
+     * @param string $body
+     * @param array  $url
+     * @param string $url
+     *
+     * @return TRUE | FALSE
+     */
     private function sendPushFcm( $token, $title, $body, $url, $icon , $button = FALSE )
     {
         // FCM Server Production
         $google_server_url = 'https://android.googleapis.com/gcm/send';
 
     }
+
     /**
      * @param string $defaultOptions
      * @param string $title
@@ -182,6 +203,7 @@ class WebPush
         return TRUE;
     }
 
+    //檢查APNS Error Response
     private function checkAppleErrorResponse(&$fp)
     {
         # byte1=always 8, byte2=StatusCode, bytes3,4,5,6=identifier(rowID). Should return nothing if OK.
@@ -190,7 +212,7 @@ class WebPush
 
         if ($apple_error_response) 
         {
-            //unpack the error response (first byte 'command" should always be 8)
+            # unpack the error response (first byte 'command" should always be 8)
             $error_response = unpack('Ccommand/Cstatus_code/Nidentifier', $apple_error_response);
 
             if ($error_response['status_code'] == '0')
@@ -240,7 +262,9 @@ class WebPush
             else if ($error_response['status_code'] == '255')
             {
                 $error_response['status_code'] = '255-None (unknown)';
-            } else {
+            }
+            else
+            {
                 $error_response['status_code'] = $error_response['status_code'] . '-Not listed';
             }
 
