@@ -4,12 +4,12 @@
 於建立WebPush物件時帶入後直接使用webPush帶入token及payload即可推播<br>
 ! 請注意Fcm payload 和 Safari payload 格式不儘相同<br>
 <hr>
+<code>
     $push_safari = new WebPush("safari",
         array( "certificateFile"=>{your certificate file path},
         "passPhrase"=>{pem password},
         "expiryTime"=>{expiryTime}
         ) );
-    
     if( $push_safari->webPush( {devices token}, {your payload data} ) )
     {
         # success code...
@@ -32,3 +32,4 @@
         # fail code...
         $error_message = $push_fcm->getErrorMsg();
     }
+</code>
