@@ -1,8 +1,9 @@
 # WebPush-PHP
-此PHP推播class於2017/9 Heat與York撰寫
-請需準備好你的相關證書或是API key
-於建立WebPush物件時帶入後直接使用webPush帶入token及payload即可推播
-! 請注意Fcm payload 和 Safari payload 格式不儘相同
+此PHP推播class於2017/9 Heat與York撰寫<br>
+請需準備好你的相關證書或是API key<br>
+於建立WebPush物件時帶入後直接使用webPush帶入token及payload即可推播<br>
+! 請注意Fcm payload 和 Safari payload 格式不儘相同<br>
+<hr>
 <pre><code>
 $push_safari = new WebPush("safari", array( "certificateFile"=>{your certificate file path}, "passPhrase"=>{pem password}, "expiryTime"=>{expiryTime} ) );
 
