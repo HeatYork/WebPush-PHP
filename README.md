@@ -9,8 +9,8 @@
 $push_safari = new WebPush("safari", array( "certificateFile"=>{your certificate file path}, "passPhrase"=>{pem password}, "expiryTime"=>{expiryTime} ) );
 
 if( $push_safari->webPush( {devices token}, {your payload data} ) )
-{
-    >># success code...
+> {
+> > #success code...
 }
 else
 {
