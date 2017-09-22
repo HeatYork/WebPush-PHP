@@ -7,13 +7,13 @@ class WebPush
 {
     // Construct parameters
     private $typeList = array('fcm', 'safari');
-    private $times, $type, $errorMsg;
+    private $type, $errorMsg;
     // Fcm parameters
-    private $fcmApiAccessKey;
+    private $fcmApiAccessKey, $timeToLive;
     // Safari parameters
-    private $expiryTime, $certificateFile, $passPhrase;
+    private $certificateFile, $passPhrase, $expiryTime;
     // Package
-    private $payloadData;
+    private $token, $payloadData;
 
     /**
      * @param string $type
@@ -47,18 +47,23 @@ class WebPush
      *
      * @return TRUE | FALSE
      */
-    public function webPush( $payloadData = FALSE )
+    public function webPush( $token = FALSE,  $payloadData = FALSE )
     {
         # 檢查物件是否有錯誤
         if( ! empty( $this->errorMsg ) ) return FALSE;
+
+        # 判斷所需參數是否都有值
+        $this->verify( "token", $token );
+        $this->verify( "payloadData", $payloadData );
+        
         # 依照type決定webpush
         switch( $this->type )
         {
             case 'fcm':
-                return $this->sendPushFcm( $this->payloadData );
+                return $this->sendPushFcm( $this->token, $this->payloadData );
                 break;
             case 'safari':
-                return $this->sendPushSafari( $this->payloadData );
+                return $this->sendPushSafari( $this->token, $this->payloadData );
                 break;
         }
     }
@@ -78,6 +83,7 @@ class WebPush
         {
             case 'fcm':
                 ! array_key_exists( "fcmApiAccessKey", $array ) && $this->errorMsg = "fcmApiAccessKey key does not exist.";
+                ! array_key_exists( "timeToLive", $array ) && $this->errorMsg = "timeToLive key does not exist.";
                 break;
             case 'safari':
                 ! array_key_exists( "expiryTime", $array ) && $this->errorMsg = "expiryTime key does not exist.";
@@ -106,7 +112,7 @@ class WebPush
     }
 
     /* Fcm 推播 */
-    private function sendPushFcm( $payloadData )
+    private function sendPushFcm( $token, $payloadData )
     {
         # Google Server 網址
         $google_server_url = 'https://fcm.googleapis.com/fcm/send';
@@ -117,13 +123,20 @@ class WebPush
             'Content-Type: application/json',
         );
 
+        # Post
+        $fields = array( 
+            "data" => $payloadData,
+            "registration_ids" => array( $token ),
+            'time_to_live' => $this->timeToLive,
+        );
+
         # curl 設定
         $ch = curl_init();
         curl_setopt( $ch, CURLOPT_URL, $google_server_url );
         curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers );
         curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE) ;
         curl_setopt( $ch, CURLOPT_POST, TRUE );
-        curl_setopt( $ch, CURLOPT_POSTFIELDS, json_encode( $payloadData ) );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS, json_encode( $fields ) );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
 
         # 回傳結果處理
@@ -168,7 +181,7 @@ class WebPush
     }
 
     /* Safari 推播 */
-    private function sendPushSafari( $payloadData )
+    private function sendPushSafari( $token, $payloadData )
     {
 
         # APNS Server 網址
@@ -189,12 +202,13 @@ class WebPush
         # This allows fread() to return right away when there are no errors.
         stream_set_blocking ( $fp, 0 );
 
-        // # payload
-        // $json_payload = json_encode( $payloadData );
-        // # Enhanced Notification
-        // $binary = pack( 'CNNnH*n', 1, 1, $this->expiryTime, 32, trim( $token ), strlen( $json_payload ) ) . $json_payload;
+        # payload
+        $json_payload = json_encode( $payloadData );
 
-        # 如果發送失敗，則進行重發，連續３次失敗，則重新建立連接，並從下一個 DeviceToken 發送
+        # Enhanced Notification
+        $binary = pack( 'CNNnH*n', 1, 1, $this->expiryTime, 32, trim( $token ), strlen( $json_payload ) ) . $json_payload;
+
+        # 如果發送失敗，則進行重發，連續３次失敗，則重新建立連接
         # 如果發送成功，但 token 回傳 Error 則中止當前推播，標記invalid，使用遞迴，從下一個Token重啟推播 
         $times = 1;
         while ( $times <= 3 )
